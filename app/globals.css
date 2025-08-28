@@ -120,3 +120,6 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Markdown tweaks */
+.prose pre code { white-space: pre-wrap; }

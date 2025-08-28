@@ -5,10 +5,13 @@
 [![Darwix AI](https://img.shields.io/badge/Powered%20by-Darwix%20AI-purple?style=for-the-badge)](https://darwix.ai)
 [![Next.js](https://img.shields.io/badge/Built%20with-Next.js%2015-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![Google AI](https://img.shields.io/badge/AI-Google%20Gemini-blue?style=for-the-badge)](https://ai.google.dev)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Visit_App-brightgreen?style=for-the-badge)](https://the-empathetic-code-reviewer-darwix.vercel.app/)
 
 ## 🎯 Overview
 
 **Empathetic Code Reviewer** is an AI-powered tool that transforms harsh or terse code review comments into constructive, educational, and empathetic feedback. Built for the **Darwix AI Hackathon**, this application helps foster a more positive and learning-oriented development culture.
+
+🔗 **Live Demo**: [https://the-empathetic-code-reviewer-darwix.vercel.app/](https://the-empathetic-code-reviewer-darwix.vercel.app/)
 
 ### ✨ Key Features
 
@@ -24,13 +27,19 @@
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 🌐 Try the Live Demo
+**No setup required!** Experience the app instantly:
+👉 **[https://the-empathetic-code-reviewer-darwix.vercel.app/](https://the-empathetic-code-reviewer-darwix.vercel.app/)**
+
+### 💻 Local Development
+
+#### Prerequisites
 
 - Node.js 18+ 
 - npm/yarn/pnpm
 - Google AI API Key
 
-### Environment Setup
+#### Environment Setup
 
 1. **Clone the repository**
    ```bash
@@ -79,7 +88,8 @@
    ```
 
 6. **Open the application**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   - **Local**: Navigate to [http://localhost:3000](http://localhost:3000)
+   - **Live Demo**: Visit [https://the-empathetic-code-reviewer-darwix.vercel.app/](https://the-empathetic-code-reviewer-darwix.vercel.app/)
 
 ## 💡 How It Works
 
@@ -286,6 +296,6 @@ For questions or support, please reach out:
   
 **Built with ❤️ for the Darwix AI Hackathon**
 
-[Visit Darwix AI](https://darwix.ai) | [View Demo](http://localhost:3000)
+[Visit Darwix AI](https://darwix.ai) | [🚀 Live Demo](https://the-empathetic-code-reviewer-darwix.vercel.app/)
 
 </div>

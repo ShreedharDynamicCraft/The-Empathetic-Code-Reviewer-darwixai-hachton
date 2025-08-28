@@ -568,19 +568,34 @@ export default function Home() {
           </motion.div>
         </div>
 
-        <div className="mt-6">
-          <GlassCard>
-            <div className="p-3 border-b border-white/10 flex items-center justify-between">
-              <div className="text-sm font-medium">Output</div>
-              <div className="flex gap-2">
+        {/* Enhanced Output Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mt-8"
+        >
+          <GlassCard gradient className="overflow-hidden">
+            <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <FloatingIcon icon={Eye} color="bg-gradient-to-r from-emerald-500 to-teal-500" />
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Analysis Results</h3>
+                  <p className="text-sm text-white/60">AI-powered empathetic code review</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="secondary"
                   onClick={() => {
                     navigator.clipboard.writeText(markdown || "");
-                    toast.success("Copied markdown to clipboard");
+                    toast.success("Copied to clipboard! ✨");
                   }}
+                  disabled={!markdown}
                 >
-                  Copy Markdown
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
                 </Button>
                 <Button
                   variant="secondary"
@@ -589,51 +604,34 @@ export default function Home() {
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;
-                    a.download = "output.md";
+                    a.download = `empathetic-review-${Date.now()}.md`;
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
                     URL.revokeObjectURL(url);
+                    toast.success("Downloaded successfully! 📁");
                   }}
+                  disabled={!markdown}
                 >
-                  Download .md
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={async () => {
-                    try {
-                      const el = document.querySelector('[data-preview-root]');
-                      if (!el) return;
-                      const { jsPDF } = await import('jspdf');
-                      const html2canvas = (await import('html2canvas')).default;
-                      const canvas = await html2canvas(el, { scale: 2, backgroundColor: null });
-                      const imgData = canvas.toDataURL('image/png');
-                      const pdf = new jsPDF('p', 'pt', 'a4');
-                      const pageWidth = pdf.internal.pageSize.getWidth();
-                      const pageHeight = pdf.internal.pageSize.getHeight();
-                      const ratio = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
-                      const imgWidth = canvas.width * ratio;
-                      const imgHeight = canvas.height * ratio;
-                      const x = (pageWidth - imgWidth) / 2;
-                      const y = 24;
-                      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-                      pdf.save('empathetic-review.pdf');
-                      toast.success('Exported to PDF');
-                    } catch (e) {
-                      toast.error('PDF export failed');
-                    }
-                  }}
-                >
-                  Export PDF
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
                 </Button>
               </div>
             </div>
-            <div className="p-3">
-              <Tabs defaultValue="preview">
-                <TabsList>
-                  <TabsTrigger value="preview">Preview</TabsTrigger>
-                  <TabsTrigger value="raw">Raw Markdown</TabsTrigger>
+            
+            <div className="p-6">
+              <Tabs defaultValue="preview" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="preview">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                  </TabsTrigger>
+                  <TabsTrigger value="raw">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Markdown
+                  </TabsTrigger>
                 </TabsList>
+                
                 <TabsContent value="preview">
                   <AnimatePresence mode="wait">
                     {loading ? (
@@ -642,43 +640,68 @@ export default function Home() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="h-[320px] w-full animate-pulse rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700"
-                      />
+                        className="h-[400px] w-full rounded-xl bg-gradient-to-br from-white/5 to-white/10 border border-white/20 flex items-center justify-center"
+                      >
+                        <div className="text-center">
+                          <motion.div
+                            className="w-16 h-16 border-4 border-white/30 border-t-violet-500 rounded-full mx-auto mb-4"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          />
+                          <p className="text-white/80 text-lg font-medium">Analyzing your code...</p>
+                          <p className="text-white/60 text-sm mt-2">Generating empathetic insights</p>
+                        </div>
+                      </motion.div>
                     ) : sections.length > 0 ? (
                       <motion.div
                         key="cards"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="space-y-4"
+                        className="space-y-6"
                         data-preview-root
                       >
                         {sections.map((s, idx) => (
-                          <div
+                          <motion.div
                             key={idx}
-                            className="rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.035] to-white/[0.02] backdrop-blur-md p-4"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className="rounded-2xl border border-white/20 bg-gradient-to-br from-white/[0.08] via-white/[0.06] to-white/[0.04] backdrop-blur-xl p-6 hover:shadow-lg hover:shadow-black/20 transition-all duration-300"
                           >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <div className="text-sm font-semibold">{s.title}</div>
-                                <div className="mt-1 inline-flex items-center gap-2 text-xs">
-                                  <span className={`px-2 py-0.5 rounded-full border ${s.severity === "high" ? "border-red-500/40 text-red-300 bg-red-500/10" : s.severity === "medium" ? "border-amber-400/40 text-amber-300 bg-amber-500/10" : "border-emerald-400/40 text-emerald-300 bg-emerald-500/10"}`}>
-                                    {s.severity === "high" ? "High" : s.severity === "medium" ? "Medium" : "Low"} impact
-                                  </span>
-                                  {s.links?.length ? (
-                                    <span className="text-white/60">{s.links.length} link(s)</span>
-                                  ) : null}
+                            <div className="flex items-start justify-between gap-4 mb-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="text-lg font-semibold text-white">{s.title}</h4>
+                                  <div
+                                    className={`px-3 py-1 rounded-full border text-xs font-medium ${
+                                      s.severity === "high" 
+                                        ? "border-red-400/40 text-red-300 bg-red-500/10" 
+                                        : s.severity === "medium" 
+                                        ? "border-amber-400/40 text-amber-300 bg-amber-500/10" 
+                                        : "border-emerald-400/40 text-emerald-300 bg-emerald-500/10"
+                                    }`}
+                                  >
+                                    {s.severity === "high" ? "🔴 High" : s.severity === "medium" ? "🟡 Medium" : "🟢 Low"} Impact
+                                  </div>
                                 </div>
+                                {s.links?.length > 0 && (
+                                  <div className="flex items-center gap-2 text-xs text-white/60">
+                                    <Star className="h-3 w-3" />
+                                    <span>{s.links.length} helpful resources included</span>
+                                  </div>
+                                )}
                               </div>
+                              
                               <div className="flex items-center gap-2">
                                 <Button
                                   variant="secondary"
                                   onClick={() => {
                                     navigator.clipboard.writeText(s.chunk);
-                                    toast.success("Card copied");
+                                    toast.success("Section copied! ✨");
                                   }}
                                 >
-                                  Copy
+                                  <Copy className="h-3 w-3" />
                                 </Button>
                                 <Button
                                   variant="secondary"
@@ -688,59 +711,101 @@ export default function Home() {
                                     setSections(next);
                                   }}
                                 >
-                                  {s.open ? "Collapse" : "Expand"}
+                                  {s.open ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                                 </Button>
                               </div>
                             </div>
-                            {s.open ? (
-                              <div className="mt-3 prose prose-invert max-w-none">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                                  {s.chunk}
-                                </ReactMarkdown>
-                                {s.links?.length ? (
-                                  <div className="mt-3 text-xs text-white/70">
-                                    Resources: {s.links.slice(0, 3).map((l, i) => (
-                                      <a key={i} className="underline decoration-dotted hover:opacity-90 mr-2" href={l} target="_blank" rel="noreferrer">{new URL(l).hostname}</a>
-                                    ))}
+                            
+                            <AnimatePresence>
+                              {s.open && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="prose prose-invert max-w-none"
+                                >
+                                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                                      {s.chunk}
+                                    </ReactMarkdown>
                                   </div>
-                                ) : null}
-                              </div>
-                            ) : null}
-                          </div>
+                                  {s.links?.length > 0 && (
+                                    <div className="mt-4 p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+                                      <div className="text-sm text-white/90 font-medium mb-2 flex items-center gap-2">
+                                        <Star className="h-4 w-4" />
+                                        Helpful Resources
+                                      </div>
+                                      <div className="flex flex-wrap gap-2">
+                                        {s.links.slice(0, 3).map((l, i) => (
+                                          <a 
+                                            key={i} 
+                                            className="text-xs text-blue-300 hover:text-blue-200 underline decoration-dotted transition-colors px-2 py-1 bg-blue-500/10 rounded border border-blue-500/20" 
+                                            href={l} 
+                                            target="_blank" 
+                                            rel="noreferrer"
+                                          >
+                                            📖 {new URL(l).hostname}
+                                          </a>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
                         ))}
+                        
+                        {/* Holistic Summary */}
                         {markdown && (
-                          <div className="rounded-xl border border-white/10 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur p-4">
-                            <div className="text-sm font-semibold mb-2">Holistic Summary</div>
-                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                              {extractHolistic(markdown)}
-                            </ReactMarkdown>
-                          </div>
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: sections.length * 0.1 + 0.2 }}
+                            className="rounded-2xl border-2 border-gradient-to-r from-violet-500/30 to-purple-500/30 bg-gradient-to-br from-violet-500/10 via-purple-500/10 to-pink-500/10 backdrop-blur p-6"
+                          >
+                            <div className="flex items-center gap-3 mb-4">
+                              <FloatingIcon icon={Sparkles} color="bg-gradient-to-r from-violet-500 to-purple-500" />
+                              <h4 className="text-xl font-bold text-white">Holistic Summary</h4>
+                            </div>
+                            <div className="prose prose-invert max-w-none">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                                {extractHolistic(markdown)}
+                              </ReactMarkdown>
+                            </div>
+                          </motion.div>
                         )}
                       </motion.div>
                     ) : (
                       <motion.div
-                        key="content"
+                        key="empty"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="prose prose-neutral max-w-none dark:prose-invert"
+                        className="h-[400px] w-full rounded-xl bg-gradient-to-br from-white/5 to-white/10 border border-white/20 flex items-center justify-center"
                       >
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                          {markdown || "The empathetic review will appear here."}
-                        </ReactMarkdown>
+                        <div className="text-center">
+                          <FloatingIcon icon={Heart} color="bg-gradient-to-r from-pink-500 to-purple-500" className="mx-auto mb-4" />
+                          <p className="text-white/80 text-lg font-medium mb-2">Ready for empathetic analysis</p>
+                          <p className="text-white/60 text-sm">Add your code and comments above to get started</p>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </TabsContent>
+                
                 <TabsContent value="raw">
-                  <pre className="h-[320px] overflow-auto rounded-lg bg-black/80 p-4 text-white text-sm whitespace-pre-wrap">
-                    {markdown}
-                  </pre>
+                  <div className="h-[400px] rounded-xl bg-black/40 border border-white/20 overflow-hidden">
+                    <pre className="h-full overflow-auto p-6 text-white/90 text-sm whitespace-pre-wrap font-mono">
+                      {markdown || "// The raw markdown output will appear here after generation"}
+                    </pre>
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>
           </GlassCard>
-        </div>
+        </motion.div>
 
         <footer className="mt-10 text-center text-xs text-muted-foreground">
           Inspired by Darwix AI’s ethos of agent-led, empathetic assistance. Learn more at <a className="underline" href="https://www.darwix.ai/" target="_blank" rel="noreferrer">darwix.ai</a>.

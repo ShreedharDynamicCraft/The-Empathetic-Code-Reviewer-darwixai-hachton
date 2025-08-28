@@ -28,9 +28,9 @@ THEN, for EACH COMMENT provide:
 * **Positive Rephrasing:** <empathetic rewrite>
 * **The 'Why':** <principle and reasoning>
 * **Suggested Improvement:**
-```<match the language in the provided code>
+\`\`\`<match the language in the provided code>
 <improved snippet>
-```
+\`\`\`
 * **Learn more:** Provide 1-2 relevant links (docs, style guides like PEP 8, MDN, language docs, or algorithmic complexity resources) that support the suggestion.
 
 Finally, end with:

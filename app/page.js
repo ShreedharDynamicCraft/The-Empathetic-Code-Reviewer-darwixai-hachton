@@ -73,10 +73,22 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [model, setModel] = useState("gemini-1.5-flash");
   const [tone, setTone] = useState("balanced");
+  const [language, setLanguage] = useState("typescript");
   const controllerRef = useRef(null);
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  const languages = {
+    typescript: { name: "TypeScript", placeholder: "// Paste your TypeScript code here\n", color: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
+    javascript: { name: "JavaScript", placeholder: "// Paste your JavaScript code here\n", color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
+    python: { name: "Python", placeholder: "# Paste your Python code here\n", color: "bg-green-500/20 text-green-400 border-green-500/30" },
+    cpp: { name: "C++", placeholder: "// Paste your C++ code here\n", color: "bg-purple-500/20 text-purple-400 border-purple-500/30" },
+    java: { name: "Java", placeholder: "// Paste your Java code here\n", color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
+    go: { name: "Go", placeholder: "// Paste your Go code here\n", color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
+    rust: { name: "Rust", placeholder: "// Paste your Rust code here\n", color: "bg-red-500/20 text-red-400 border-red-500/30" },
+    php: { name: "PHP", placeholder: "<?php\n// Paste your PHP code here\n", color: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" }
+  };
 
   const commentsArray = useMemo(
     () =>
@@ -99,7 +111,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controllerRef.current.signal,
-        body: JSON.stringify({ code, comments: commentsArray, model, tone }),
+        body: JSON.stringify({ code, comments: commentsArray, model, tone, language }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to generate");
@@ -117,6 +129,7 @@ export default function Home() {
         code,
         comments: commentsArray,
         tone,
+        language,
         markdown: data.markdown || "",
       };
       const next = [entry, ...history].slice(0, 10);
@@ -400,16 +413,28 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full border border-green-500/30">
-                    TypeScript
-                  </span>
+                  <select
+                    className={`rounded-lg border px-3 py-1 text-xs font-medium ${languages[language].color}`}
+                    value={language}
+                    onChange={(e) => {
+                      setLanguage(e.target.value);
+                      setCode(languages[e.target.value].placeholder);
+                    }}
+                  >
+                    {Object.entries(languages).map(([key, lang]) => (
+                      <option key={key} value={key} className="bg-slate-900">
+                        {lang.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="p-6">
                 <div className="h-[400px] rounded-xl overflow-hidden border border-white/20 shadow-inner">
                   <Editor
                     height="400px"
-                    defaultLanguage="typescript"
+                    defaultLanguage={language}
+                    language={language}
                     theme="vs-dark"
                     value={code}
                     onChange={(v) => setCode(v ?? "")}
@@ -464,7 +489,7 @@ export default function Home() {
                 <Textarea
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
-                  placeholder="Examples:&#10;• Function names are unclear&#10;• Missing error handling&#10;• Performance could be better&#10;• Consider using TypeScript types"
+                  placeholder="Examples:&#10;• Function names are unclear&#10;• Missing error handling&#10;• Performance could be better&#10;• Code structure needs improvement&#10;• Consider adding documentation"
                   className="min-h-[300px] resize-none bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-xl"
                 />
                 
@@ -536,6 +561,7 @@ export default function Home() {
                                 setCode(h.code);
                                 setComments(h.comments.join("\n"));
                                 setTone(h.tone || "balanced");
+                                setLanguage(h.language || "typescript");
                                 setMarkdown(h.markdown);
                                 setSections(parseSections(h.markdown));
                                 toast.success("Session loaded successfully!");

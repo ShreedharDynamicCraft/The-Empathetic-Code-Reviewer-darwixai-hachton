@@ -2,12 +2,27 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const runtime = "nodejs";
 
-function buildPrompt(code, comments, tone = "balanced") {
+function buildPrompt(code, comments, tone = "balanced", language = "typescript") {
   const joinedComments = comments
     .map((c, i) => `- Comment ${i + 1}: ${c}`)
     .join("\n");
 
+  const languageMap = {
+    typescript: "TypeScript",
+    javascript: "JavaScript", 
+    python: "Python",
+    cpp: "C++",
+    java: "Java",
+    go: "Go",
+    rust: "Rust",
+    php: "PHP"
+  };
+
+  const languageName = languageMap[language] || "the provided language";
+
   return `You are an Empathetic Code Reviewer for a hackathon demo. Desired tone: ${tone} (options: gentle, balanced, direct). Turn terse or harsh review comments into kind, educational, specific guidance. Adapt tone based on severity of the original comment: gentle for minor/style issues, more direct yet supportive for correctness/security. Include improved code examples where helpful. Use professional, friendly tone. Use Markdown with headings and code fences.
+
+The code is written in ${languageName}. Please provide language-specific suggestions and follow ${languageName} best practices and conventions.
 
 REQUIRED OUTPUT FORMAT (strict): For EACH original comment, produce a section with EXACTLY these sub-sections:
 
@@ -28,10 +43,10 @@ THEN, for EACH COMMENT provide:
 * **Positive Rephrasing:** <empathetic rewrite>
 * **The 'Why':** <principle and reasoning>
 * **Suggested Improvement:**
-\`\`\`<match the language in the provided code>
+\`\`\`${language}
 <improved snippet>
 \`\`\`
-* **Learn more:** Provide 1-2 relevant links (docs, style guides like PEP 8, MDN, language docs, or algorithmic complexity resources) that support the suggestion.
+* **Learn more:** Provide 1-2 relevant links (docs, style guides like PEP 8 for Python, MDN for JavaScript, ${languageName} official docs, or algorithmic complexity resources) that support the suggestion.
 
 Finally, end with:
 ## Holistic Summary
@@ -59,7 +74,7 @@ export async function POST(req) {
       : [];
     if (!process.env.GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "Missing GEMINI_API_KEY" }),
+        JSON.stringify({ error: "Missing GEMINI_API_KEY environment variable. Please add it to your .env.local file." }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -72,9 +87,10 @@ export async function POST(req) {
     }
 
     const tone = typeof body?.tone === "string" ? body.tone : "balanced";
+    const language = typeof body?.language === "string" ? body.language : "typescript";
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = buildPrompt(code, comments, tone);
+    const prompt = buildPrompt(code, comments, tone, language);
 
     const response = await model.generateContent(prompt);
     const text = response?.response?.text?.() || "";

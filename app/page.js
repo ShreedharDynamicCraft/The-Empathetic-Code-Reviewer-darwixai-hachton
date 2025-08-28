@@ -777,6 +777,26 @@ export default function Home() {
                           </motion.div>
                         )}
                       </motion.div>
+                    ) : markdown ? (
+                      <motion.div
+                        key="fallback"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="space-y-6"
+                      >
+                        <div className="rounded-2xl border border-white/20 bg-gradient-to-br from-white/[0.08] via-white/[0.06] to-white/[0.04] backdrop-blur-xl p-6">
+                          <div className="flex items-center gap-3 mb-4">
+                            <FloatingIcon icon={Sparkles} color="bg-gradient-to-r from-violet-500 to-purple-500" />
+                            <h4 className="text-xl font-bold text-white">Empathetic Code Review</h4>
+                          </div>
+                          <div className="prose prose-invert max-w-none">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                              {markdown}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      </motion.div>
                     ) : (
                       <motion.div
                         key="empty"

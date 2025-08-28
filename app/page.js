@@ -69,11 +69,15 @@ export default function Home() {
   const [markdown, setMarkdown] = useState("");
   const [sections, setSections] = useState([]);
   const [history, setHistory] = useState([]);
-  const [activeTab, setActiveTab] = useState("editor"); // editor | output | history
+  const [activeTab, setActiveTab] = useState("editor"); // editor | output | history | github
   const [loading, setLoading] = useState(false);
   const [model, setModel] = useState("gemini-1.5-flash");
   const [tone, setTone] = useState("balanced");
   const [language, setLanguage] = useState("typescript");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [githubFiles, setGithubFiles] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [githubLoading, setGithubLoading] = useState(false);
   const controllerRef = useRef(null);
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -192,6 +196,79 @@ export default function Home() {
     return "low";
   }
 
+  async function fetchGithubRepo() {
+    if (!githubUrl.trim()) {
+      toast.error("Please enter a GitHub repository URL");
+      return;
+    }
+
+    // Extract owner and repo from URL
+    const match = githubUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    if (!match) {
+      toast.error("Invalid GitHub URL format. Use: https://github.com/owner/repo");
+      return;
+    }
+
+    const [, owner, repo] = match;
+    setGithubLoading(true);
+    
+    try {
+      const response = await fetch(`/api/github`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner, repo }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Failed to fetch repository");
+
+      setGithubFiles(data.files || []);
+      setActiveTab("github");
+      toast.success(`Found ${data.files?.length || 0} code files in repository`);
+    } catch (error) {
+      toast.error(error.message || "Error fetching repository");
+    } finally {
+      setGithubLoading(false);
+    }
+  }
+
+  async function generateGithubReview() {
+    if (selectedFiles.length === 0) {
+      toast.error("Please select at least one file to review");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/github-review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          files: selectedFiles,
+          tone,
+          model 
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || "Failed to generate review");
+
+      setMarkdown(data.markdown || "");
+      if (data.markdown) {
+        setSections(parseSections(data.markdown));
+      } else {
+        setSections([]);
+      }
+      
+      setActiveTab("output");
+      toast.success("GitHub repository review generated!");
+    } catch (error) {
+      toast.error(error.message || "Error generating review");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     function onKey(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -200,8 +277,9 @@ export default function Home() {
       }
       // Tab switching
       if (e.altKey && e.key === "1") { e.preventDefault(); setActiveTab("editor"); }
-      if (e.altKey && e.key === "2") { e.preventDefault(); setActiveTab("output"); }
-      if (e.altKey && e.key === "3") { e.preventDefault(); setActiveTab("history"); }
+      if (e.altKey && e.key === "2") { e.preventDefault(); setActiveTab("github"); }
+      if (e.altKey && e.key === "3") { e.preventDefault(); setActiveTab("output"); }
+      if (e.altKey && e.key === "4") { e.preventDefault(); setActiveTab("history"); }
       // Expand/Collapse all
       if (e.altKey && (e.key === "e" || e.key === "E")) {
         e.preventDefault();
@@ -395,7 +473,56 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Main Content Grid */}
+        {/* Tab Navigation */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-center">
+            <div className="inline-flex items-center gap-1 rounded-xl bg-white/5 border border-white/20 p-1 backdrop-blur-sm">
+              <button
+                onClick={() => setActiveTab("editor")}
+                className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
+                  activeTab === "editor"
+                    ? "bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-white border border-violet-500/30"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Code2 className="mr-2 h-4 w-4 inline" />
+                Code Review
+              </button>
+              <button
+                onClick={() => setActiveTab("github")}
+                className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
+                  activeTab === "github"
+                    ? "bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-white border border-violet-500/30"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <svg className="mr-2 h-4 w-4 inline" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                GitHub Review
+              </button>
+              <button
+                onClick={() => setActiveTab("output")}
+                className={`px-4 py-2 text-sm rounded-lg transition-all duration-300 ${
+                  activeTab === "output"
+                    ? "bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-white border border-violet-500/30"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Eye className="mr-2 h-4 w-4 inline" />
+                Results
+              </button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Main Content - Code Editor */}
+        {activeTab === "editor" && (
         <div className="grid lg:grid-cols-2 gap-8 mb-8">
           {/* Code Editor Section */}
           <motion.div
@@ -593,8 +720,147 @@ export default function Home() {
             </GlassCard>
           </motion.div>
         </div>
+        )}
+
+        {/* GitHub Review Section */}
+        {activeTab === "github" && (
+        <div className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <GlassCard gradient>
+              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <FloatingIcon icon={() => (
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                  )} color="bg-gradient-to-r from-gray-700 to-gray-900" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">GitHub Repository Review</h3>
+                    <p className="text-sm text-white/60">Analyze public GitHub repositories</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="space-y-6">
+                  {/* GitHub URL Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Repository URL
+                    </label>
+                    <div className="flex gap-3">
+                      <Input
+                        value={githubUrl}
+                        onChange={(e) => setGithubUrl(e.target.value)}
+                        placeholder="https://github.com/owner/repository"
+                        className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                      />
+                      <Button
+                        onClick={fetchGithubRepo}
+                        disabled={githubLoading}
+                        className="bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-white border-0"
+                      >
+                        {githubLoading ? (
+                          <motion.div
+                            className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          />
+                        ) : (
+                          <>
+                            <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                            Fetch Files
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* File Selection */}
+                  {githubFiles.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-medium text-white/80 mb-2">
+                        Select Files to Review ({selectedFiles.length} selected)
+                      </label>
+                      <div className="max-h-[400px] overflow-auto bg-white/5 rounded-xl border border-white/20 p-4">
+                        <div className="space-y-2">
+                          {githubFiles.map((file, index) => (
+                            <label key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedFiles.some(f => f.path === file.path)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedFiles([...selectedFiles, file]);
+                                  } else {
+                                    setSelectedFiles(selectedFiles.filter(f => f.path !== file.path));
+                                  }
+                                }}
+                                className="rounded border-white/20 bg-white/10 text-violet-500 focus:ring-violet-500"
+                              />
+                              <div className="flex-1">
+                                <div className="text-white/90 text-sm">{file.path}</div>
+                                <div className="text-white/60 text-xs">{file.language} • {file.size} bytes</div>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 flex gap-3">
+                        <Button
+                          onClick={() => setSelectedFiles(githubFiles)}
+                          variant="secondary"
+                          className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                        >
+                          Select All
+                        </Button>
+                        <Button
+                          onClick={() => setSelectedFiles([])}
+                          variant="secondary"
+                          className="bg-white/10 hover:bg-white/20 border-white/20 text-white"
+                        >
+                          Clear All
+                        </Button>
+                        <Button
+                          onClick={generateGithubReview}
+                          disabled={selectedFiles.length === 0 || loading}
+                          className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0"
+                        >
+                          {loading ? (
+                            <>
+                              <motion.div
+                                className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              />
+                              Analyzing...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              Generate Review
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </div>
+        )}
 
         {/* Enhanced Output Section */}
+        {activeTab === "output" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -852,6 +1118,7 @@ export default function Home() {
             </div>
           </GlassCard>
         </motion.div>
+        )}
 
         <footer className="mt-10 text-center text-xs text-muted-foreground">
           Inspired by Darwix AI’s ethos of agent-led, empathetic assistance. Learn more at <a className="underline" href="https://www.darwix.ai/" target="_blank" rel="noreferrer">darwix.ai</a>.

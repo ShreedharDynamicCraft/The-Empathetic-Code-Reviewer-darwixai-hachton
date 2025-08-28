@@ -13,6 +13,7 @@
 ### ✨ Key Features
 
 - 🔄 **Multi-Language Support**: TypeScript, JavaScript, Python, C++, Java, Go, Rust, PHP
+- 🐙 **GitHub Integration**: Analyze entire public repositories with smart file selection
 - 🎨 **Beautiful UI**: Modern glassmorphism design with smooth animations
 - 🤖 **AI-Powered**: Uses Google Gemini for intelligent analysis
 - 📊 **Smart Analysis**: Categorizes feedback by severity and impact
@@ -82,26 +83,48 @@
 
 ## 💡 How It Works
 
-### Step 1: Choose Your Language
+### 🎯 Code Review Mode
+
+#### Step 1: Choose Your Language
 Select from 8 supported programming languages using the dropdown in the code editor.
 
-### Step 2: Paste Your Code
+#### Step 2: Paste Your Code
 Add the code snippet you want reviewed in the Monaco editor.
 
-### Step 3: Add Review Comments
+#### Step 3: Add Review Comments
 Enter harsh or terse review comments (one per line) such as:
 - "Function names are unclear"
 - "Missing error handling"
 - "Performance could be better"
 - "Code structure needs improvement"
 
-### Step 4: Generate Empathetic Review
+#### Step 4: Generate Empathetic Review
 Click "Generate Empathetic Review" and watch as AI transforms your comments into:
 - **Positive Rephrasing**: Kind, constructive language
 - **Educational Context**: The "why" behind each suggestion
 - **Code Examples**: Improved snippets with explanations
 - **Learning Resources**: Relevant documentation and guides
 - **Severity Classification**: High/Medium/Low impact indicators
+
+### 🐙 GitHub Repository Review Mode
+
+#### Step 1: Enter Repository URL
+Paste a public GitHub repository URL (e.g., `https://github.com/owner/repo`)
+
+#### Step 2: Fetch Repository Files
+Click "Fetch Files" to automatically discover all code files in the repository
+
+#### Step 3: Select Files for Review
+Choose which files you want to analyze (supports up to 10 files per review)
+
+#### Step 4: Generate Repository Review
+Get a comprehensive analysis including:
+- **Repository Overview**: Structure and technology assessment
+- **Code Quality Analysis**: Strengths and improvement areas
+- **File-by-File Insights**: Specific feedback for each file
+- **Security Considerations**: Potential security issues
+- **Performance Opportunities**: Optimization suggestions
+- **Architecture Feedback**: Design pattern recommendations
 
 ### Step 5: Review & Share
 - Preview the formatted output
@@ -124,16 +147,19 @@ Click "Generate Empathetic Review" and watch as AI transforms your comments into
 ```
 empathetic-code-reviewer/
 ├── app/
-│   ├── api/review/route.js    # AI processing endpoint
-│   ├── globals.css            # Global styles
-│   ├── layout.js             # Root layout
-│   └── page.js               # Main application
-├── components/ui/            # Reusable UI components
-├── lib/                      # Utility functions
-├── public/                   # Static assets
-├── .env.local               # Environment variables
-├── package.json             # Dependencies
-└── README.md               # This file
+│   ├── api/
+│   │   ├── review/route.js          # Individual code review endpoint
+│   │   ├── github/route.js          # GitHub repository fetching
+│   │   └── github-review/route.js   # GitHub repository analysis
+│   ├── globals.css                  # Global styles
+│   ├── layout.js                   # Root layout
+│   └── page.js                     # Main application
+├── components/ui/                  # Reusable UI components
+├── lib/                           # Utility functions
+├── public/                        # Static assets
+├── .env.local                     # Environment variables
+├── package.json                   # Dependencies
+└── README.md                      # This file
 ```
 
 ## 🛠️ Tech Stack
@@ -166,7 +192,9 @@ npm run lint
 
 ### API Endpoints
 
-- `POST /api/review`: Processes code and comments through AI
+- `POST /api/review`: Processes individual code snippets and comments through AI
+- `POST /api/github`: Fetches file list from public GitHub repositories  
+- `POST /api/github-review`: Analyzes selected files from GitHub repositories
 
 ### Key Dependencies
 

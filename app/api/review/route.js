@@ -89,7 +89,7 @@ export async function POST(req) {
     const tone = typeof body?.tone === "string" ? body.tone : "balanced";
     const language = typeof body?.language === "string" ? body.language : "typescript";
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
     const prompt = buildPrompt(code, comments, tone, language);
 
     const response = await model.generateContent(prompt);

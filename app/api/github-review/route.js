@@ -89,8 +89,7 @@ Remember to be encouraging and educational while providing actionable feedback.`
 
 export async function POST(req) {
   try {
-    const { files, tone = "balanced", model = "gemini-1.5-flash" } = await req.json();
-
+const { files, tone = "balanced", model = "models/gemini-2.5-flash" } = await req.json();
     if (!files || !Array.isArray(files) || files.length === 0) {
       return new Response(
         JSON.stringify({ error: "No files provided for review" }),
